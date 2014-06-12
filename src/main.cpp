@@ -77,6 +77,14 @@ int64_t nTransactionFee = MIN_TX_FEE;
 int64_t nReserveBalance = 0;
 int64_t nMinimumInputValue = 0;
 
+static const int NUM_OF_POW_CHECKPOINT = 3;
+static const int checkpointPoWHeight[NUM_OF_POW_CHECKPOINT][2] =
+{
+	{ 20000,  8017},
+	{ 40000, 12452},
+	{ 50000, 13758}
+};
+
 extern enum Checkpoints::CPMode CheckpointsMode;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -972,27 +980,51 @@ int generateMTRandom(unsigned int s, int range)
     return dist(gen);
 }
 
-int GetSpecialHeight(const CBlockIndex* pindex, bool fProofOfStake)
+int GetPowHeight(const CBlockIndex* pindex)
 {
 	int count = 0;
-    while (pindex)
+	int height = pindex->nHeight;
+	int maxCheck = height;
+	int index = -1;
+	const CBlockIndex* pindex0 = pindex;
+
+	if(NUM_OF_POW_CHECKPOINT != 0)
 	{
-		if(pindex->IsProofOfStake() == fProofOfStake)
+		for(int i = 1; i <= NUM_OF_POW_CHECKPOINT; i++)
+		{
+			if(height > checkpointPoWHeight[NUM_OF_POW_CHECKPOINT - i][0])
+			{
+				index = NUM_OF_POW_CHECKPOINT - i;
+				break;
+			}
+		}
+	}
+
+	if(index != -1)
+		maxCheck = height - checkpointPoWHeight[index][0];
+
+    for(int j = 0; j < maxCheck; j++)
+	{
+		if(!pindex->IsProofOfStake())
 			++count;
 
         pindex = pindex->pprev;
 	}
+
+	if(index != -1)
+		count += checkpointPoWHeight[index][1];
+	else
+		++count;
+
+	// printf(">> Height = %d, Count = %d\n", height, count);
     return count;
 }
 
-int GetPowHeight(const CBlockIndex* pindex)
-{
-	return GetSpecialHeight(pindex, false);
-}
 
 int GetPosHeight(const CBlockIndex* pindex)
 {
-	return GetSpecialHeight(pindex, true);
+	int posH = pindex->nHeight - GetPowHeight(pindex);
+	return posH;
 }
 
 
@@ -1006,14 +1038,45 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees, const CBlockIndex* pind
 	if(nHeight == 1)
 		nSubsidy = INITIAL_OFFERING_PERCENTAGE * POW_MAX_MONEY;
 
+	if(nHeight > LAST_POW_BLOCK)
+		return 0;
+
 	int nPoWHeight = GetPowHeight(pindex) + 1;
+	printf(">> nHeight = %d, nPoWHeight = %d\n", nHeight, nPoWHeight);
 
-	int nReduceFactor = nPoWHeight / 43200;
+	int nReduceFactor = 0;
+	if(nPoWHeight < SWITCHOVER_POW_BLOCK)
+	{
+		nReduceFactor = nPoWHeight / 43200;
 
-	if(nReduceFactor > 9)		
-		nSubsidy = nMinSubsidy;
+		if(nReduceFactor > 9)		
+			nSubsidy = nMinSubsidy;
+		else
+			nSubsidy >>= nReduceFactor;
+	}
 	else
-		nSubsidy >>= nReduceFactor;
+	{
+		if(nPoWHeight < 19200)
+			nSubsidy = 512 * COIN;
+		else if(nPoWHeight < 28800)
+			nSubsidy = 256 * COIN;
+		else if(nPoWHeight < 38400)
+			nSubsidy = 128 * COIN;
+		else if(nPoWHeight < 48000)
+			nSubsidy = 64 * COIN;
+		else if(nPoWHeight < 57600)
+			nSubsidy = 32 * COIN;
+		else if(nPoWHeight < 67200)
+			nSubsidy = 16 * COIN;
+		else if(nPoWHeight < 76800)
+			nSubsidy = 8 * COIN;
+		else if(nPoWHeight < 86400)
+			nSubsidy = 4 * COIN;
+		else if(nPoWHeight < 96000)
+			nSubsidy = 2 * COIN;
+		else
+			nSubsidy = 1 * COIN;
+	}
 
     return nSubsidy + nFees;
 }
@@ -1028,7 +1091,7 @@ int64_t GetProofOfWorkBonusRewardFactor(CBlockIndex* pindex)
 	if (!pindex->IsProofOfWork())
 	    return 0;
 
-	if(pindex->nHeight < 3)	// block 3 or less not allowed for superblock.
+	if(pindex->nHeight < 3 || pindex->nHeight > LAST_POW_BLOCK)	
 		return 0;
 
 	uint256 hash = pindex->GetBlockHash();
@@ -1094,7 +1157,7 @@ int64_t GetProofOfStakeReward(int64_t nCoinAge, const CBlockIndex* pindex)
 			upperLimit = 10000000;
 
 		// printf(">> random = %d, lowerLimit = %d, upperLimit = %d, nPoWHeight = %d\n",
-		//	random, lowerLimit, upperLimit, nPoWHeight);
+		// 	random, lowerLimit, upperLimit, nPoWHeight);
 
 		if(random >= lowerLimit && random <= upperLimit)
 		{
@@ -2230,6 +2293,9 @@ bool CBlock::AcceptBlock()
         return DoS(10, error("AcceptBlock() : prev block not found"));
     CBlockIndex* pindexPrev = (*mi).second;
     int nHeight = pindexPrev->nHeight+1;
+
+    if (IsProofOfWork() && nHeight > LAST_POW_BLOCK)
+        return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
 
     // Check proof-of-work or proof-of-stake
     if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
