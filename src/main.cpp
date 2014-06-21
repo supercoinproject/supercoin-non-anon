@@ -1037,7 +1037,7 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees, const CBlockIndex* pind
 	int64_t nSubsidy = 512 * COIN;
 
 	if(nHeight == 1)
-		nSubsidy = INITIAL_OFFERING_PERCENTAGE * POW_MAX_MONEY;
+		nSubsidy = 2500000 * COIN;
 
 	if(nHeight > LAST_POW_BLOCK)
 		return 0;
