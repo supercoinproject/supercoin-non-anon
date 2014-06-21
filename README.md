@@ -1,6 +1,7 @@
 SuperCoin (SUPER)
 
 Supercoin is a new X11 crypto coin, it has many new, original or advanced features. It uses PoW and PoS with true random SuperBlocks. It has both PoW and PoS superblocks, where it is the first coin with PoS super bonus blocks! It also uses the advanced PoW/PoS separation technology so both PoW and PoS are more stable and secure.
+Supercoin will add anonymous features in main network soon!
 
 - X11
 - PoW/PoS independent
@@ -17,8 +18,7 @@ PoW
 	- Every day there will be a block with 16X normal payment (initial 8192 coins)
 	- Every 5 days there will be a block with 128X normal payment (initial 65536 coins)
 
-- block payout will be halved every 45 days
-- minimum PoW payout for will be 1 coin/block
+- block payout will maintain at 512 coins for 20 block days, then at 256 coins/block for 5 days. After it the PoW will be shutdown.
 
 PoS
 - 20 sec PoS block time
@@ -33,10 +33,10 @@ PoS
 - Super-PoS-Blocks!! Only for the 1st year: 
 	1 chance in 5 million coin-day (about 0.5 - 10 times per day depends on the PoS generation), that a super-PoS-block of 1024 coins on top of your regular PoS will be generated.
 
-- Total PoW coins will be 50,000,000.
-- Total coins (including PoS) will be about 150,000,000.
+- Total PoW coins will be 14.3 millions.
+- Total coins (including PoS) will be about 45,000,000.
 
-- 5% of total PoW coins will be used for mini-IPO
+- 2.5 million coins will be used for mini-IPO
 
 - Zero premine (except for mini-IPO)
 
