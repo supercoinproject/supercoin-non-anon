@@ -26,7 +26,8 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 400000;	// estimated to be about 100 days
+static const int LAST_POW_BLOCK = 150000;	
+static const int LAST_POW_ONLY_BLOCK = 24000;	
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
