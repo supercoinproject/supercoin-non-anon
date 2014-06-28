@@ -48,10 +48,6 @@ double GetPoWMHashPS()
     if (pindexBest->nHeight >= LAST_POW_BLOCK)
         return 0;
 
-	int powH = GetPowHeight(pindexBest);
-	if(powH > LAST_POW_ONLY_BLOCK)
-		return 0;
-
     int nPoWInterval = 72;
     int64_t nTargetSpacingWorkMin = 30, nTargetSpacingWork = 30;
 

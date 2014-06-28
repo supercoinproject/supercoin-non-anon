@@ -77,15 +77,16 @@ int64_t nTransactionFee = MIN_TX_FEE;
 int64_t nReserveBalance = 0;
 int64_t nMinimumInputValue = 0;
 
-static const int NUM_OF_POW_CHECKPOINT = 4;
+static const int NUM_OF_POW_CHECKPOINT = 6;
 static const int checkpointPoWHeight[NUM_OF_POW_CHECKPOINT][2] =
 {
 	{ 20000,  8017},
 	{ 40000, 12452},
 	{ 60000, 15611},
-	{ 80000, 18819}
+	{ 80000, 18819},
+	{100001, 21524},
+	{118900, 23988}
 };
-
 extern enum Checkpoints::CPMode CheckpointsMode;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -981,6 +982,8 @@ int generateMTRandom(unsigned int s, int range)
     return dist(gen);
 }
 
+static int FINAL_POW_HEIGHT = 118986;
+static int FINAL_POW_COUNT = 24000;
 int GetPowHeight(const CBlockIndex* pindex)
 {
 	int count = 0;
@@ -988,6 +991,9 @@ int GetPowHeight(const CBlockIndex* pindex)
 	int maxCheck = height;
 	int index = -1;
 	const CBlockIndex* pindex0 = pindex;
+
+	if(height > FINAL_POW_HEIGHT)
+		return FINAL_POW_COUNT;
 
 	if(NUM_OF_POW_CHECKPOINT != 0)
 	{
@@ -1028,9 +1034,6 @@ int GetPosHeight(const CBlockIndex* pindex)
 	return posH;
 }
 
-
-static const int64_t nMinSubsidy = 1 * COIN;
-
 // miner's coin base reward
 int64_t GetProofOfWorkReward(int nHeight, int64_t nFees, const CBlockIndex* pindex)
 {
@@ -1048,21 +1051,15 @@ int64_t GetProofOfWorkReward(int nHeight, int64_t nFees, const CBlockIndex* pind
 	int nPoWHeight = GetPowHeight(pindex) + 1;
 	printf(">> nHeight = %d, nPoWHeight = %d\n", nHeight, nPoWHeight);
 
-	int nReduceFactor = 0;
 	if(nPoWHeight < SWITCHOVER_POW_BLOCK)
 	{
-		nReduceFactor = nPoWHeight / 43200;
-
-		if(nReduceFactor > 9)		
-			nSubsidy = nMinSubsidy;
-		else
-			nSubsidy >>= nReduceFactor;
+		nSubsidy >>= (nPoWHeight / 43200);
 	}
 	else
 	{
 		if(nPoWHeight < 19200)
 			nSubsidy = 512 * COIN;
-		else if(nPoWHeight < LAST_POW_ONLY_BLOCK)
+		else if(nPoWHeight < 24000)
 			nSubsidy = 256 * COIN;
 		else
 			nSubsidy = 0 * COIN;
@@ -1082,10 +1079,6 @@ int64_t GetProofOfWorkBonusRewardFactor(CBlockIndex* pindex)
 	    return 0;
 
 	if(pindex->nHeight < 3 || pindex->nHeight > LAST_POW_BLOCK)	
-		return 0;
-
-	int powH = GetPowHeight(pindex);
-	if(powH > LAST_POW_ONLY_BLOCK)
 		return 0;
 
 	uint256 hash = pindex->GetBlockHash();
@@ -2287,9 +2280,8 @@ bool CBlock::AcceptBlock()
         return DoS(10, error("AcceptBlock() : prev block not found"));
     CBlockIndex* pindexPrev = (*mi).second;
     int nHeight = pindexPrev->nHeight+1;
-	int powH = GetPowHeight(pindexPrev) + 1;
 
-    if (IsProofOfWork() && (nHeight > LAST_POW_BLOCK || powH > LAST_POW_ONLY_BLOCK))
+    if (IsProofOfWork() && nHeight > LAST_POW_BLOCK)
         return DoS(100, error("AcceptBlock() : reject proof-of-work at height %d", nHeight));
 
     // Check proof-of-work or proof-of-stake

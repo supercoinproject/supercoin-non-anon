@@ -26,8 +26,7 @@ class CInv;
 class CRequestTracker;
 class CNode;
 
-static const int LAST_POW_BLOCK = 150000;	
-static const int LAST_POW_ONLY_BLOCK = 24000;	
+static const int LAST_POW_BLOCK = 118987;
 
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIZE_GEN = MAX_BLOCK_SIZE/2;
@@ -37,7 +36,6 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const int64_t MIN_TX_FEE = 10000;
 static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
 static const int64_t MAX_MONEY = 50000000 * COIN;
-static const double INITIAL_OFFERING_PERCENTAGE = 0.05;
 static const int64_t MAX_PROOF_OF_STAKE_STABLE = 0.01 * COIN;	// 1% annual interest
 
 static const int SWITCHOVER_POW_BLOCK = 17500;
