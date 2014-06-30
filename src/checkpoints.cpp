@@ -14,6 +14,7 @@
 namespace Checkpoints
 {
     typedef std::map<int, uint256> MapCheckpoints;
+	static int MAX_NO_SYNC_CHECKPOINT = 127000;
 
     //
     // What makes a good checkpoint block?
@@ -32,6 +33,9 @@ namespace Checkpoints
         ( 80000, uint256("0x076d2acf84bb605ee26f34b58e520b7db28e3aa7ddd5365a5265c209a7b3c812"))
 		(100000, uint256("0x00000000000d320bffd3fc5729e8ec0256961cec85f02d12dbf022528f9b2820"))
 		(120000, uint256("0x6d09a534ad8ff2d6548ca54de3338fb9709b434be6cd9d53bc0aaeaba9fc9712"))
+	 	(125600, uint256("0xca8417b5153fe0bd5badea78d2f937331a7cc2e2f2382960e680a5324385fcc2"))
+		(126000, uint256("0x907d058d9a3f51479b8afe6206f0c050bac49f11003f907823a3bc13837a7e11"))
+		(127700, uint256("0x49d828662d30b9d904f56b804c9ff1ec670414fc1500469737e9e8b4d337e6f7")) 
     ;
 
     // TestNet has no checkpoints
@@ -99,6 +103,9 @@ namespace Checkpoints
 
         CBlockIndex* pindexSyncCheckpoint = mapBlockIndex[hashSyncCheckpoint];
         CBlockIndex* pindexCheckpointRecv = mapBlockIndex[hashCheckpoint];
+
+		if(pindexCheckpointRecv->nHeight < MAX_NO_SYNC_CHECKPOINT)
+			return false;
 
         if (pindexCheckpointRecv->nHeight <= pindexSyncCheckpoint->nHeight)
         {
@@ -206,11 +213,16 @@ namespace Checkpoints
     {
         if (fTestNet) return true; // Testnet has no checkpoints
         int nHeight = pindexPrev->nHeight + 1;
+		if(nHeight < MAX_NO_SYNC_CHECKPOINT)
+			return true;
 
         LOCK(cs_hashSyncCheckpoint);
         // sync-checkpoint should always be accepted block
         assert(mapBlockIndex.count(hashSyncCheckpoint));
         const CBlockIndex* pindexSync = mapBlockIndex[hashSyncCheckpoint];
+
+		if(pindexSync->nHeight < MAX_NO_SYNC_CHECKPOINT)
+			return true;
 
         if (nHeight > pindexSync->nHeight)
         {
