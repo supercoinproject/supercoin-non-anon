@@ -14,7 +14,7 @@
 namespace Checkpoints
 {
     typedef std::map<int, uint256> MapCheckpoints;
-	static int MAX_NO_SYNC_CHECKPOINT = 127000;
+	static int MAX_NO_SYNC_CHECKPOINT = 451000;
 
     //
     // What makes a good checkpoint block?
@@ -35,8 +35,6 @@ namespace Checkpoints
 		(300000, uint256("0xc3f357f3f1474e43f927fe606d33938ab828666d9a2216bcc4f32ff58bf7173e")) 
 		(350000, uint256("0xcfefea68aa35eae1240308bc7993beb390d8383ad9b0325e381ac3dd4a7fd237")) 
 		(400000, uint256("0x56dde9a3bcd09341db6214a6397cae8e2b5b5d38cce758b8c8b88365c2d6198c")) 
-		(428420, uint256("0x0ecce796a51688a527bc0e05e2c663b8323cbeaf767424a2ebb48950a709c84e")) 
-		(431412, uint256("0xf72d211bab330d2b3d4f4f4ffb134f7830e49e7eb6fa2de4f64b878ca13ca1c0")) 
     ;
 
     // TestNet has no checkpoints
@@ -204,8 +202,10 @@ namespace Checkpoints
     {
         const CBlockIndex *pindex = pindexBest;
         // Search backward for a block within max span and maturity window
+		
         while (pindex->pprev && (pindex->GetBlockTime() + CHECKPOINT_MAX_SPAN > pindexBest->GetBlockTime() || pindex->nHeight + 8 > pindexBest->nHeight))
             pindex = pindex->pprev;
+			
         return pindex->GetBlockHash();
     }
 
